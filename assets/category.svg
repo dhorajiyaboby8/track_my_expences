@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="73" height="73" viewBox="0 0 73 73">
+  <defs>
+    <clipPath id="clip-path">
+      <path id="Path_1384" data-name="Path 1384" d="M139.21,139.21h36v36h-36Z" transform="translate(-139.21 -139.21)" fill="#a4bae6"/>
+    </clipPath>
+  </defs>
+  <g id="Group_230" data-name="Group 230" transform="translate(-1002 -643)">
+    <circle id="Ellipse_673" data-name="Ellipse 673" cx="36.5" cy="36.5" r="36.5" transform="translate(1002 643)" fill="#fff"/>
+    <g id="download_2_" data-name="download (2)" transform="translate(1020 661)" clip-path="url(#clip-path)">
+      <path id="Path_1383" data-name="Path 1383" d="M171.01,139.21h-27.6a4.2,4.2,0,0,0-4.2,4.2v27.6a4.2,4.2,0,0,0,4.2,4.2h27.6a4.2,4.2,0,0,0,4.2-4.2v-27.6a4.2,4.2,0,0,0-4.2-4.2Zm-23.98,29.453a2.545,2.545,0,1,1,1.8-.746A2.544,2.544,0,0,1,147.03,168.663Zm0-8.908a2.544,2.544,0,1,1,1.8-.745A2.546,2.546,0,0,1,147.03,159.755Zm0-8.907a2.545,2.545,0,1,1,1.8-.745A2.546,2.546,0,0,1,147.03,150.847Zm21.632,16.543h-14a1.273,1.273,0,0,1,0-2.545h14a1.273,1.273,0,0,1,0,2.545Zm0-8.908h-14a1.273,1.273,0,0,1,0-2.545h14a1.273,1.273,0,0,1,0,2.545Zm0-8.908h-14a1.273,1.273,0,0,1,0-2.545h14a1.273,1.273,0,0,1,0,2.545Z" transform="translate(-139.21 -139.21)" fill="#a4bae6"/>
+    </g>
+  </g>
+</svg>
