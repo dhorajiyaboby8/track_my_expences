@@ -15,7 +15,7 @@ class SharedPrefrencesHelper {
 
   static String? getdateformat() => _preferences?.getString(_keyformat);
 
-
+   
   static Future setcurrency(String currency) async =>
       await _preferences?.setString(_keycurrency, currency);
 
