@@ -2,24 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:track_my_expences/database/database.dart';
 import 'package:track_my_expences/models/categoryModel.dart';
 import 'package:track_my_expences/models/itemModel.dart';
-import 'package:track_my_expences/shared_preference/datetimeformat.dart';
-import 'package:track_my_expences/ui/addexpense.dart';
+import 'package:track_my_expences/shared_preference/dateTimeFormat.dart';
+import 'package:track_my_expences/ui/addExpense.dart';
 import 'package:track_my_expences/ui/category.dart';
-import 'package:track_my_expences/ui/expensehistory.dart';
+import 'package:track_my_expences/ui/expenseHistory.dart';
 import 'package:track_my_expences/ui/items.dart';
-import 'package:track_my_expences/ui/pricehistory.dart';
+import 'package:track_my_expences/ui/priceHistory.dart';
 import 'package:track_my_expences/ui/setting.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-Future main()async {
+Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SharedPrefrencesHelper.init();
 
-  runApp(const homepage());
+  runApp(const homePage());
 }
 
-class homepage extends StatelessWidget {
-  const homepage({Key? key}) : super(key: key);
+class homePage extends StatelessWidget {
+  const homePage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -32,28 +32,34 @@ class homepage extends StatelessWidget {
       //   brightness: Brightness.dark,
       // ),
       debugShowCheckedModeBanner: false,
-      home: homescreen(),
+      home: homeScreen(),
     );
   }
 }
 
-class homescreen extends StatefulWidget {
-  const homescreen({Key? key}) : super(key: key);
+class homeScreen extends StatefulWidget {
+  const homeScreen({Key? key}) : super(key: key);
 
   @override
-  _homescreenState createState() => _homescreenState();
+  _homeScreenState createState() => _homeScreenState();
 }
 
-class _homescreenState extends State<homescreen> {
+class _homeScreenState extends State<homeScreen> {
   List<ItemModel> itemList = [];
   List<CategoryModel> categoryList = [];
   final dbHelper = DatabaseHelper.instance;
 
   @override
   void initState() {
-    fetchfiveItems();
-    // fetchfiveCategories();
 
+   var existingCurrencyCode = SharedPrefrencesHelper.getCurrencyCode();
+   if (existingCurrencyCode == null) {
+     SharedPrefrencesHelper.setCurrencySymbol("₹");
+     SharedPrefrencesHelper.setCurrencyCode("INR");
+     SharedPrefrencesHelper.setDateFormat("dd/MM/yyyy");
+   }
+
+    fetchfiveItems();
     super.initState();
   }
 
@@ -71,10 +77,14 @@ class _homescreenState extends State<homescreen> {
       body: Padding(
         padding: const EdgeInsets.all(14.0),
         child: SingleChildScrollView(
-          child: Column(
+          child:
+
+          Column(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             crossAxisAlignment: CrossAxisAlignment.start,
+
             children: [
+
               Text(
                 'Add expense by item ',
                 style: TextStyle(
@@ -85,91 +95,57 @@ class _homescreenState extends State<homescreen> {
               Padding(
                 padding: const EdgeInsets.only(top: 14, bottom: 14),
                 child: Container(
-                  height: 48,
+                  height: 35,
                   child: ListView.builder(
                     physics: BouncingScrollPhysics(),
                     scrollDirection: Axis.horizontal,
                     shrinkWrap: true,
                     itemCount: itemList.length,
                     itemBuilder: (BuildContext context, int index) {
-                      return InkWell(
-                        child: Card(
-                          clipBehavior: Clip.antiAlias,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(10.0)),
-                          ),
+                      return Padding(
+                        padding: const EdgeInsets.all(4.0),
+                        child: InkWell(
                           child: Container(
-                            height: 34,
+                            height: 20,
                             width: 74,
+                            // decoration: BoxDecoration(
+                            //   border: Border.all(
+                            //     color: Color(0xFF58638A),
+                            //     width: 1,
+                            //   ),
+                            // ),
                             decoration: BoxDecoration(
-                              border: Border.all(
+                            border: Border.all(
                                 color: Color(0xFF58638A),
                                 width: 1,
                               ),
-                            ),
+                                shape: BoxShape.rectangle,
+                                borderRadius: BorderRadius.all(
+                                    Radius.circular(13.0),
+                                    )),
                             child: Center(
                               child: Text(
-                                '${itemList[index].itemname}',
+                                '${itemList[index].itemName}',
                                 style: TextStyle(
                                     fontSize: 15, fontFamily: 'Poppins'),
                               ),
                             ),
                           ),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => addExpense(itemList[index].categoryId,itemList[index].itemId,itemList[index].itemName,itemList[index].itemPrice),
+                              ),
+                            );
+                          },
                         ),
-                        onTap: (){
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => addexpense(),
-                            ),
-                          );
-                        },
                       );
                     },
+
                   ),
                 ),
               ),
-              // Text(
-              //   'Add expense by category ',
-              //   style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-              // ),
-              // Padding(
-              //   padding: const EdgeInsets.only(top: 14, bottom: 14),
-              //   child: Container(
-              //     height: 48,
-              //     child: ListView.builder(
-              //       physics: BouncingScrollPhysics(),
-              //       scrollDirection: Axis.horizontal,
-              //       shrinkWrap: true,
-              //       itemCount: categoryList.length,
-              //       itemBuilder: (BuildContext context, int index) {
-              //         return Card(
-              //           clipBehavior: Clip.antiAlias,
-              //           shape: RoundedRectangleBorder(
-              //             borderRadius: BorderRadius.all(Radius.circular(10.0)),
-              //           ),
-              //           child: Container(
-              //             height: 34,
-              //             width: 74,
-              //             decoration: BoxDecoration(
-              //               border: Border.all(
-              //                 color: Color(0xFF58638A),
-              //                 width: 1,
-              //               ),
-              //             ),
-              //             child: Center(
-              //               child: Text(
-              //                 '${categoryList[index].name}',
-              //                 style: TextStyle(
-              //                     fontSize: 15, fontFamily: 'Poppins'),
-              //               ),
-              //             ),
-              //           ),
-              //         );
-              //       },
-              //     ),
-              //   ),
-              // ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -180,57 +156,43 @@ class _homescreenState extends State<homescreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                Container(
-                                  height: 73,
-                                  width: 73,
+                          Stack(alignment: Alignment.center, children: [
+                            Container(
+                              height: 73,
+                              width: 73,
 
-                                  decoration: new BoxDecoration(
-                                    // image: new DecorationImage(
-                                    //   image: new AssetImage('assets/setting.png'),
-                                    //   fit: BoxFit.cover,
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(40.0),
-                                    ),
-
-
-                                  ),
-                                  // child: new Image.asset(
-                                  //   'assets/setting.png',
-                                  //   width: 40.0,
-                                  //   height: 40.0,
-                                  //   fit: BoxFit.cover,
-                                  // ),
+                              decoration: new BoxDecoration(
+                                // image: new DecorationImage(
+                                //   image: new AssetImage('assets/setting.png'),
+                                //   fit: BoxFit.cover,
+                                color: Colors.white,
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(40.0),
                                 ),
-                                Container(
-                                  height: 40,
-                                  width: 40,
-
-                                  decoration: new BoxDecoration(
-                                    image: new DecorationImage(
-                                      image: new AssetImage('assets/Category.png'),
-                                      fit: BoxFit.cover,
-
-
-                                    ),
-
-
-                                  ),
-                                  // child: new Image.asset(
-                                  //   'assets/setting.png',
-                                  //   width: 40.0,
-                                  //   height: 40.0,
-                                  //   fit: BoxFit.cover,
-                                  // ),
+                              ),
+                              // child: new Image.asset(
+                              //   'assets/setting.png',
+                              //   width: 40.0,
+                              //   height: 40.0,
+                              //   fit: BoxFit.cover,
+                              // ),
+                            ),
+                            Container(
+                              height: 40,
+                              width: 40,
+                              decoration: new BoxDecoration(
+                                image: new DecorationImage(
+                                  image: new AssetImage('assets/Category.png'),
+                                  fit: BoxFit.cover,
                                 ),
-                              ]
-                          ),
+                              ),
+                            ),
+                          ]),
                           Text('Category',
                               style: TextStyle(
-                                  fontFamily: 'Poppins', fontSize: 16, color: Color(0xFF2B4394),
+                                  fontFamily: 'Poppins',
+                                  fontSize: 16,
+                                  color: Color(0xFF2B4394),
                                   fontWeight: FontWeight.bold))
                         ],
                       ),
@@ -242,7 +204,7 @@ class _homescreenState extends State<homescreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => category(),
+                          builder: (context) => addCategory(),
                         ),
                       );
                     },
@@ -271,7 +233,7 @@ class _homescreenState extends State<homescreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => items(),
+                          builder: (context) => addItem(-1),
                         ),
                       );
                     },
@@ -314,17 +276,10 @@ class _homescreenState extends State<homescreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => addexpense(),
+                          builder: (context) => addExpense(-1,-1,'',''),
                         ),
                       ).then((value) => {
-                            // if(lengthofitemdata!=itemList.length || lengthofcategorydata!=categoryList.length)
-                            //   {
                             fetchfiveItems(),
-                            // fetchfiveCategories()
-                            //   }
-                            // else{
-                            //   print('132'),
-                            // }
                           });
                     },
                   ),
@@ -356,7 +311,7 @@ class _homescreenState extends State<homescreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => pricehistory(),
+                          builder: (context) => priceHistory(-1,-1),
                         ),
                       );
                     },
@@ -397,7 +352,7 @@ class _homescreenState extends State<homescreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => expensehistory(),
+                          builder: (context) => expenseHistory(),
                         ),
                       );
                     },
@@ -409,54 +364,28 @@ class _homescreenState extends State<homescreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          Stack(
-                              alignment: Alignment.center,
-                      children: [
-                        Container(
+                          Stack(alignment: Alignment.center, children: [
+                            Container(
                               height: 73,
                               width: 73,
-
-                        decoration: new BoxDecoration(
-                              // image: new DecorationImage(
-                              //   image: new AssetImage('assets/setting.png'),
-                              //   fit: BoxFit.cover,
-                            color: Colors.white,
-                            borderRadius: BorderRadius.all(
-                              Radius.circular(40.0),
+                              decoration: new BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(40.0),
+                                ),
+                              ),
                             ),
-
-
-                        ),
-                              // child: new Image.asset(
-                              //   'assets/setting.png',
-                              //   width: 40.0,
-                              //   height: 40.0,
-                              //   fit: BoxFit.cover,
-                              // ),
+                            Container(
+                              height: 40,
+                              width: 40,
+                              decoration: new BoxDecoration(
+                                image: new DecorationImage(
+                                  image: new AssetImage('assets/setting.png'),
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
                             ),
-                        Container(
-                          height: 40,
-                          width: 40,
-
-                          decoration: new BoxDecoration(
-                            image: new DecorationImage(
-                              image: new AssetImage('assets/setting.png'),
-                              fit: BoxFit.cover,
-
-
-                            ),
-
-
-                          ),
-                          // child: new Image.asset(
-                          //   'assets/setting.png',
-                          //   width: 40.0,
-                          //   height: 40.0,
-                          //   fit: BoxFit.cover,
-                          // ),
-                        ),
-                      ]
-                          ),
+                          ]),
                           Text('Setting',
                               style: TextStyle(
                                   fontFamily: 'Poppins',
@@ -473,7 +402,7 @@ class _homescreenState extends State<homescreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => setting(),
+                          builder: (context) =>  setting(),
                         ),
                       );
                     },
@@ -489,13 +418,6 @@ class _homescreenState extends State<homescreen> {
 
   fetchfiveItems() async {
     itemList = await dbHelper.getLastItems();
-    print(itemList.length);
     setState(() {});
   }
-
-  // fetchfiveCategories() async {
-  //   categoryList = await dbHelper.getLastCategory();
-  //   print(categoryList.length);
-  //   setState(() {});
-  // }
 }

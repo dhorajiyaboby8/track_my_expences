@@ -1,30 +1,30 @@
 import 'package:track_my_expences/database/database.dart';
 
 class ItemModel {
-  int categoryid;
-  String itemname;
-  int itemkey;
-  String itemprice;
+  int categoryId;
+  String itemName;
+  int itemId;
+  String itemPrice;
 
-  ItemModel(this.categoryid, this.itemname, this.itemkey, this.itemprice);
+  ItemModel(this.categoryId, this.itemName, this.itemId, this.itemPrice);
 
   Map<String, dynamic> toMapWithoutId() {
     final map = Map<String, dynamic>();
-    map[DatabaseHelper.columnCategoryId] = categoryid;
-    map[DatabaseHelper.columnItemName] = itemname;
-    map[DatabaseHelper.columnItemPrice] = itemprice;
+    map[DatabaseHelper.columnCategoryId] = categoryId;
+    map[DatabaseHelper.columnItemName] = itemName;
+    map[DatabaseHelper.columnItemPrice] = itemPrice;
 
     return map;
   }
 
   Map<String, dynamic> toMap() {
     final map = Map<String, dynamic>();
-    map[DatabaseHelper.columnCategoryId] = categoryid;
-    if (itemkey > 0) {
-      map[DatabaseHelper.columnItemId] = itemkey;
+    map[DatabaseHelper.columnCategoryId] = categoryId;
+    if (itemId > 0) {
+      map[DatabaseHelper.columnItemId] = itemId;
     }
-    map[DatabaseHelper.columnItemName] = itemname;
-    map[DatabaseHelper.columnItemPrice] = itemprice;
+    map[DatabaseHelper.columnItemName] = itemName;
+    map[DatabaseHelper.columnItemPrice] = itemPrice;
 
     return map;
   }

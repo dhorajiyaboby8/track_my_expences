@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:track_my_expences/shared_preference/datetimeformat.dart';
+import 'package:track_my_expences/shared_preference/dateTimeFormat.dart';
 import 'package:currency_picker/currency_picker.dart';
 
 class setting extends StatefulWidget {
@@ -10,20 +10,9 @@ class setting extends StatefulWidget {
 }
 
 class _settingState extends State<setting> {
-  final dropdownKey = GlobalKey<FormState>();
-  var date = 'dd/mm/yyyy';
-
-  dynamic _handleGenderChange(value) {
-    Navigator.pop(context);
-
-    setState(() {});
-  }
-
-  var countydata ;
-  var countrydata= 'INR';
+  final dropDownKey = GlobalKey<FormState>();
 
   void initState() {
-
     super.initState();
   }
 
@@ -39,9 +28,9 @@ class _settingState extends State<setting> {
         backgroundColor: Color(0xFF1D65BD),
       ),
       body: Form(
-          key: dropdownKey,
+          key: dropDownKey,
           child: Padding(
-            padding: const EdgeInsets.only(top: 10, bottom: 10),
+            padding: const EdgeInsets.all(10.0),
             child: SingleChildScrollView(
               child: Column(children: [
                 Container(
@@ -55,14 +44,14 @@ class _settingState extends State<setting> {
                         children: [
                           // Icon(Icons.beach_access),
                           // SizedBox(width: 10),
-                          Text('  Date format',
+                          Text('Date format',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
                               )),
 
                           InkWell(
-                              child: Text(date),
+                              child: Text(getDateFormat()),
                               onTap: () {
                                 _popupDialog(context);
                               })
@@ -83,14 +72,14 @@ class _settingState extends State<setting> {
                         children: [
                           // Icon(Icons.beach_access),
                           // SizedBox(width: 10),
-                          Text('  Currency',
+                          Text('Currency',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
                               )),
 
                           InkWell(
-                              child: Text(countrydata),
+                              child: Text(getCurrency()),
                               onTap: () {
                                 showCurrencyPicker(
                                   context: context,
@@ -98,12 +87,10 @@ class _settingState extends State<setting> {
                                   showCurrencyName: true,
                                   showCurrencyCode: true,
                                   onSelect: (Currency currency) {
-                                    countydata = currency.symbol;
-                                    countrydata = currency.code;
-                                    SharedPrefrencesHelper.setcurrency(
-                                        countydata);
-                                    SharedPrefrencesHelper.setcurrencycode(
-                                        countrydata);
+                                    SharedPrefrencesHelper.setCurrencySymbol(
+                                        currency.symbol);
+                                    SharedPrefrencesHelper.setCurrencyCode(
+                                        currency.code);
 
                                     setState(() {});
                                   },
@@ -125,41 +112,82 @@ class _settingState extends State<setting> {
         context: context,
         builder: (context) {
           return AlertDialog(
-            title: Text('Dateformat'),
+            title: Text('Date Format'),
             actions: <Widget>[
-              Column(
-                children: [
-                  Row(
-                    children: [
-                      Radio(
-                          value: 'yyyy/mm/dd',
-                          groupValue: date,
-                          onChanged: _handleGenderChange),
-                      Text('yyyy/mm/dd')
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      Radio(
-                          value: 'mm/dd/yyyy',
-                          groupValue: date,
-                          onChanged: _handleGenderChange),
-                      Text('mm/dd/yyyy')
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      Radio(
-                          value: 'dd/mm/yyyy',
-                          groupValue: date,
-                          onChanged: _handleGenderChange),
-                      Text('dd/mm/yyyy')
-                    ],
-                  ),
-                ],
+              Padding(
+                padding: const EdgeInsets.all(14.0),
+                child: Column(
+                  children: [
+                    InkWell(
+                      child: Container(
+                        height: 40,
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'MM/dd/yyyy',
+                            style: TextStyle(fontSize: 16),
+                          ),
+                        ),
+                      ),
+                      onTap: () {
+                        SharedPrefrencesHelper.setDateFormat('MM/dd/yyyy');
+
+                        setState(() {});
+                        Navigator.pop(context);
+                      },
+                    ),
+
+                    InkWell(
+                      child: Container(
+                        height: 40,
+                        child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'yyyy/MM/dd',
+                              style: TextStyle(fontSize: 16),
+                            )),
+                      ),
+                      onTap: () {
+                        SharedPrefrencesHelper.setDateFormat('yyyy/MM/dd');
+
+                        setState(() {});
+                        Navigator.pop(context);
+                      },
+                    ),
+
+                    InkWell(
+                      child: Container(
+                        height: 40,
+                        child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'dd/MM/yyyy',
+                              style: TextStyle(fontSize: 16),
+                            )),
+                      ),
+                      onTap: () {
+                        SharedPrefrencesHelper.setDateFormat('dd/MM/yyyy');
+
+                        setState(() {});
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ],
+                ),
               ),
             ],
           );
         });
+  }
+
+  getCurrency() {
+    var currency =  SharedPrefrencesHelper.getCurrencySymbol();
+    var currencyCode = SharedPrefrencesHelper.getCurrencyCode();
+    return "$currencyCode ($currency)";
+  }
+
+  getDateFormat() {
+
+    return SharedPrefrencesHelper.getDateFormat();
   }
 }
