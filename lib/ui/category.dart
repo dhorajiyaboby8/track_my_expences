@@ -1,27 +1,43 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:pdf/pdf.dart';
 import 'package:track_my_expences/models/categoryModel.dart';
 import 'package:track_my_expences/database/database.dart';
+import 'package:track_my_expences/ui/items.dart';
+import 'package:syncfusion_flutter_pdf/pdf.dart';
 
-class category extends StatefulWidget {
-  const category({Key? key}) : super(key: key);
+
+
+
+class addCategory extends StatefulWidget {
+   addCategory({Key? key}) : super(key: key);
 
   @override
-  _categoryState createState() => _categoryState();
+  _addCategoryState createState() => _addCategoryState();
 }
 
-class _categoryState extends State<category> {
+class _addCategoryState extends State<addCategory> {
   List<CategoryModel> categoryList = [];
   final dbHelper = DatabaseHelper.instance;
 
   TextEditingController _category = TextEditingController();
+ TextEditingController _categorysearch =TextEditingController();
+
   final formKey = GlobalKey<FormState>();
   CategoryModel? selectedCategory;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  Icon customIcon = const Icon(Icons.search);
 
+  Widget customSearchBar =const Text(
+    'Category',
+    style: TextStyle(fontFamily: 'Poppins', fontSize: 20)
+  );
   @override
   void initState() {
+
     fetchCategories();
+
     super.initState();
   }
 
@@ -30,10 +46,53 @@ class _categoryState extends State<category> {
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
-        title: const Text(
-          'Category',
-          style: TextStyle(fontFamily: 'Poppins', fontSize: 20),
-        ),
+        title:  customSearchBar,
+
+        actions: [
+          IconButton(
+            onPressed: () {
+              setState(() {
+                if (customIcon.icon == Icons.search) {
+                  customIcon = const Icon(Icons.cancel);
+                  customSearchBar =  ListTile(
+                    leading: Icon(
+                      Icons.search,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                    title: TextField(
+                      controller: _categorysearch,
+
+                      decoration: InputDecoration(
+                        hintText: 'search category',
+
+                        hintStyle: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontStyle: FontStyle.italic,
+                        ),
+                        border: InputBorder.none,
+
+                      ),
+                      style: TextStyle(
+                        color: Colors.white,
+                      ),
+
+                      onTap:  fetchCategories(),
+                    ),
+                  );
+                } else {
+                  customIcon =  Icon(Icons.search);
+                  customSearchBar =Text(
+                    'Category',
+                    style: TextStyle(fontFamily: 'Poppins', fontSize: 20),
+                  );
+                }
+              });
+            },
+            icon: customIcon,
+          )
+        ],
         centerTitle: true,
         backgroundColor: Color(0xFF1D65BD),
       ),
@@ -42,18 +101,16 @@ class _categoryState extends State<category> {
             return Slidable(
               child: Container(
                 color: Colors.white,
-                height: 74,
+                height: 50,
                 width: 375,
                 child: Padding(
                   padding: const EdgeInsets.all(12.0),
                   child: Row(
                     children: [
-                      Expanded(
-                        child: Text(
-                          categoryList[index].name,
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 16),
-                        ),
+                      Text(
+                        categoryList[index].categoryName,
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                     ],
                   ),
@@ -61,13 +118,13 @@ class _categoryState extends State<category> {
               ),
               endActionPane: ActionPane(
                 motion: const DrawerMotion(),
-                extentRatio: 0.30,
+                extentRatio: 0.4,
                 children: [
                   SlidableAction(
                     backgroundColor: Color(0xFFF6F9FF),
                     icon: Icons.edit,
                     onPressed: (context) {
-                      _category.text = categoryList[index].name;
+                      _category.text = categoryList[index].categoryName;
                       _displayDialog(context, categoryList[index], true);
                     },
                   ),
@@ -75,7 +132,20 @@ class _categoryState extends State<category> {
                     backgroundColor: Color(0xFFF6F9FF),
                     icon: Icons.delete,
                     onPressed: (context) {
-                      showAlertDialog(context, index, categoryList[index].key);
+                      showAlertDialog(context, index, categoryList[index].categoryId);
+                    },
+                  ),
+                  SlidableAction(
+                    backgroundColor: Color(0xFFF6F9FF),
+           icon:Icons.arrow_forward,
+                    onPressed:(context){
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                          builder: (context) => addItem(categoryList[index].categoryId),
+                      ),
+
+                      );
                     },
                   ),
                 ],
@@ -105,9 +175,8 @@ class _categoryState extends State<category> {
   }
 
   fetchCategories() async {
-    categoryList = await dbHelper.getAllCategories();
+    categoryList = await dbHelper.getAllCategories(_categorysearch.text);
     categoryList.sort(sortByName);
-    // data.reversed.toList();
 
     setState(() {});
   }
@@ -187,7 +256,7 @@ class _categoryState extends State<category> {
                     cursorColor: Colors.black,
                     validator: (value) {
                       if(isEdit == true){
-                      if (value!.isEmpty && selectedCategory!.name.contains(_category.text)) {
+                      if (value!.isEmpty && selectedCategory!.categoryName.contains(_category.text)) {
                         return "Please enter Category or category already added";
                       } else {
                         return null;
@@ -241,7 +310,7 @@ class _categoryState extends State<category> {
                           onPressed: () async {
                             if (formKey.currentState!.validate()) {
                               if (isEdit) {
-                                updateCategory(categoryModel.key);
+                                updateCategory(categoryModel.categoryId);
                               } else {
                                 insertCategory();
                               }
@@ -275,5 +344,6 @@ class _categoryState extends State<category> {
   //   var b0 = b.name;
   //   return a0.compareTo(b0);
   // }
-  Comparator<CategoryModel> sortByName = (a, b) => a.name.compareTo(b.name);
+  Comparator<CategoryModel> sortByName = (a, b) => a.categoryName.compareTo(b.categoryName);
+
 }

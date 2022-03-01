@@ -3,48 +3,52 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:track_my_expences/database/database.dart';
 import 'package:track_my_expences/models/categoryModel.dart';
-import 'package:track_my_expences/models/expensemodel.dart';
+import 'package:track_my_expences/models/expenseModel.dart';
 import 'package:track_my_expences/models/itemModel.dart';
 import "package:intl/intl.dart";
-import 'package:track_my_expences/shared_preference/datetimeformat.dart';
+import 'package:track_my_expences/models/priceHistoryModel.dart';
+import 'package:track_my_expences/shared_preference/dateTimeFormat.dart';
 
-class addexpense extends StatefulWidget {
-  const addexpense({Key? key}) : super(key: key);
-
+class addExpense extends StatefulWidget {
   @override
-  _addexpenseState createState() => _addexpenseState();
+  _addExpenseState createState() => _addExpenseState();
+  String itemName;
+  String itemPrice;
+  int categoryId;
+  int itemId;
+
+  addExpense(this.categoryId, this.itemId, this.itemName, this.itemPrice);
 }
 
-class _addexpenseState extends State<addexpense> {
+class _addExpenseState extends State<addExpense> {
   List<CategoryModel> categoryList = [];
   List<ItemModel> itemList = [];
   List<ExpenseModel> expenseList = [];
 
   final dbHelper = DatabaseHelper.instance;
-  late CategoryModel category;
   CategoryModel? selectedCategory;
   ItemModel? selectedItem;
 
-  final dropdownKey1 = GlobalKey<FormState>();
+  final dropDownKey = GlobalKey<FormState>();
   DateTime selectedDate = DateTime.now();
- var dateformat =SharedPrefrencesHelper.getdateformat();
+  var dateFormat = SharedPrefrencesHelper.getDateFormat();
   TextEditingController _dateController = TextEditingController();
   TextEditingController _itemPrice = TextEditingController();
   TextEditingController _itemQuantity = TextEditingController();
-  TextEditingController _totalprice = TextEditingController();
-  TextEditingController _itemnotes = TextEditingController();
+  TextEditingController _totalPrice = TextEditingController();
+  TextEditingController _expenseNote = TextEditingController();
 
   void initState() {
     fetchCategory();
-    print(dateformat);
-    _dateController.text = DateFormat(dateformat).format(selectedDate);
+    _itemPrice.text = widget.itemPrice.toString();
+
+    _dateController.text = DateFormat('yyyy-MM-dd').format(selectedDate);
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-
       appBar: AppBar(
         title: const Text(
           'Add Expense',
@@ -56,7 +60,7 @@ class _addexpenseState extends State<addexpense> {
       body: Padding(
         padding: const EdgeInsets.all(15.0),
         child: Form(
-          key: dropdownKey1,
+          key: dropDownKey,
           child: SingleChildScrollView(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -72,9 +76,12 @@ class _addexpenseState extends State<addexpense> {
                     },
                     onChanged: (value) {
                       setState(() {
+                        print(value?.categoryName);
+                        print(value?.categoryId);
+                        print(categoryList.length);
                         selectedCategory = value!;
                         _itemPrice.clear();
-                        _totalprice.clear();
+                        _totalPrice.clear();
                         _itemQuantity.clear();
                         selectedItem = null;
                         fetchItems();
@@ -86,7 +93,7 @@ class _addexpenseState extends State<addexpense> {
                         child: Row(
                           children: <Widget>[
                             Text(
-                              categoryModel.name,
+                              categoryModel.categoryName,
                               style: TextStyle(color: Colors.black),
                             ),
                           ],
@@ -101,7 +108,6 @@ class _addexpenseState extends State<addexpense> {
                 DropdownButtonFormField<ItemModel>(
                   hint: Text(
                     "Select Item",
-                    style: TextStyle(color: Colors.black),
                   ),
                   value: selectedItem,
                   validator: (value) {
@@ -112,7 +118,7 @@ class _addexpenseState extends State<addexpense> {
                   onChanged: (value) {
                     setState(() {
                       selectedItem = value!;
-                      _itemPrice.text = selectedItem!.itemprice;
+                      _itemPrice.text = selectedItem!.itemPrice;
                       // fetchItem();
                       // if (selectedItem!.categoryid != -1) {
                       //   dropdownKey1.currentState!.validate();
@@ -125,7 +131,7 @@ class _addexpenseState extends State<addexpense> {
                       child: Row(
                         children: <Widget>[
                           Text(
-                            itemModel.itemname,
+                            itemModel.itemName,
                             style: TextStyle(color: Colors.black),
                           ),
                         ],
@@ -153,7 +159,7 @@ class _addexpenseState extends State<addexpense> {
                     ).then((selectedDate) {
                       if (selectedDate != null) {
                         _dateController.text =
-                            DateFormat(dateformat).format(selectedDate);
+                            DateFormat('yyyy-MM-dd').format(selectedDate);
                       }
                     });
                   },
@@ -212,7 +218,7 @@ class _addexpenseState extends State<addexpense> {
                 TextFormField(
                     cursorColor: Colors.black,
                     readOnly: true,
-                    controller: _totalprice,
+                    controller: _totalPrice,
                     inputFormatters: <TextInputFormatter>[
                       FilteringTextInputFormatter.digitsOnly
                     ],
@@ -233,7 +239,7 @@ class _addexpenseState extends State<addexpense> {
                       var totalprice = intprice * intquantity;
                       print(totalprice);
                       setState(() {
-                        _totalprice.text = totalprice.toString();
+                        _totalPrice.text = totalprice.toString();
                       });
                     }),
                 SizedBox(
@@ -241,7 +247,7 @@ class _addexpenseState extends State<addexpense> {
                 ),
                 TextFormField(
                   cursorColor: Colors.black,
-                  controller: _itemnotes,
+                  controller: _expenseNote,
                   minLines: 4,
                   maxLines: 10,
                   decoration: InputDecoration(
@@ -261,7 +267,7 @@ class _addexpenseState extends State<addexpense> {
                         backgroundColor: Color(0xFF1D65BD),
                       ),
                       onPressed: () {
-                        if (dropdownKey1.currentState!.validate()) {
+                        if (dropDownKey.currentState!.validate()) {
                           insertExpense();
                           Navigator.pop(context);
                         }
@@ -271,7 +277,7 @@ class _addexpenseState extends State<addexpense> {
                         style: TextStyle(
                             fontSize: 16,
                             color: Colors.white,
-                        fontFamily: 'poppins'),
+                            fontFamily: 'poppins'),
                       )),
                 )
               ],
@@ -283,48 +289,87 @@ class _addexpenseState extends State<addexpense> {
   }
 
   fetchCategory() async {
-    categoryList = await dbHelper.getAllCategories();
-
+    categoryList = await dbHelper.getAllCategories('');
+    for (var index = 0; index <= categoryList.length - 1; index++) {
+      if (widget.categoryId == categoryList[index].categoryId) {
+        selectedCategory = categoryList[index];
+        break;
+      }
+    }
+    fetchItems();
     categoryList.sort(sortByCategory);
     setState(() {});
   }
 
   fetchItems() async {
-    print(selectedCategory!.key);
-    itemList = await dbHelper.getAllItems(selectedCategory!.key);
+    itemList = await dbHelper.getAllItems(selectedCategory?.categoryId);
 
-    setState(() {});
+    for (var j = 0; j <= itemList.length - 1; j++) {
+      if (widget.itemId == itemList[j].itemId) {
+        print(itemList[j].itemName);
+        print(widget.itemName);
+        selectedItem = itemList[j];
+        break;
+      }
+    }
   }
-  statusindicator() {
-    var itemprice = int.parse(selectedItem!.itemprice);
-    var newitemprice = int.parse(_itemPrice.text);
 
-    int difference = newitemprice - itemprice;
+  statusIndicator() {
+    var itemPrice = int.parse(selectedItem!.itemPrice);
+    var newItemPrice = int.parse(_itemPrice.text);
+
+    int difference = newItemPrice - itemPrice;
     return difference;
   }
+
   void insertExpense() async {
-    print(selectedItem!.itemname);
+    if (selectedItem?.itemPrice != _itemPrice.text) {
+      insertPriceChange();
+
+      updateItem(selectedItem!.itemId, selectedItem!.categoryId);
+    }
     ExpenseModel expenseModel = ExpenseModel(
         0,
-        selectedItem!.categoryid,
-        selectedItem!.itemkey,
-        selectedItem!.itemname.toString(),
+        selectedItem!.categoryId,
+        selectedItem!.itemId,
+        selectedItem!.itemName.toString(),
         _dateController.text.toString(),
         _itemPrice.text.toString(),
         _itemQuantity.text.toString(),
-        _totalprice.text.toString(),
-        _itemnotes.text.toString());
-    final expensedetail = await dbHelper.insertExpense(expenseModel);
-    print(expensedetail);
+        _totalPrice.text.toString(),
+        _expenseNote.text.toString());
+    final expenseDetail = await dbHelper.insertExpense(expenseModel);
   }
+
   Future<String?> getStringFromPrefrences() async {
     SharedPreferences _prefs = await SharedPreferences.getInstance();
 
     String? value = _prefs.getString("string");
     return value;
-
   }
 
-  Comparator<CategoryModel> sortByCategory = (a, b) => a.name.compareTo(b.name);
-  Comparator<ItemModel> sortByItem = (a, b) => a.itemname.compareTo(b.itemname);
+  Comparator<CategoryModel> sortByCategory =
+      (a, b) => a.categoryName.compareTo(b.categoryName);
+  Comparator<ItemModel> sortByItem = (a, b) => a.itemName.compareTo(b.itemName);
+
+  void updateItem(int key, int categoryId) async {
+    ItemModel itemModel = ItemModel(
+        categoryId, selectedItem!.itemName, key, _itemPrice.text.toString());
+    final rowsAffected = await dbHelper.updateItem(itemModel);
+    print('updated $rowsAffected row(s)');
+    itemList.clear();
+    fetchItems();
+  }
+
+  void insertPriceChange() async {
+    print('insertPriceChange');
+    var changeDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    PriceHistoryModel priceHistoryModel = PriceHistoryModel(
+        0,
+        selectedItem!.itemId,
+        selectedItem!.itemPrice,
+        _itemPrice.text.toString(),
+        changeDate);
+    final id = await dbHelper.insertPriceChange(priceHistoryModel);
+  }
 }

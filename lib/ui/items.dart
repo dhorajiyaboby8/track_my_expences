@@ -4,33 +4,34 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:track_my_expences/models/categoryModel.dart';
 import 'package:track_my_expences/database/database.dart';
 import 'package:track_my_expences/models/itemModel.dart';
-import 'package:track_my_expences/shared_preference/datetimeformat.dart';
+import 'package:track_my_expences/shared_preference/dateTimeFormat.dart';
+import 'package:track_my_expences/ui/priceHistory.dart';
 
-class items extends StatefulWidget {
-  const items({Key? key}) : super(key: key);
+class addItem extends StatefulWidget {
 
   @override
-  _itemsState createState() => _itemsState();
+  _addItemState createState() => _addItemState();
+int categoryid;
+  addItem(this.categoryid);
 }
 
-class _itemsState extends State<items> {
+class _addItemState extends State<addItem> {
   List<ItemModel> itemList = [];
-  late ItemModel dataofitem;
   List<CategoryModel> categoryList = [];
   TextEditingController _items = TextEditingController();
   TextEditingController _price = TextEditingController();
 
   CategoryModel? selectedCategory;
   ItemModel? selectedItems;
-  var symbol = SharedPrefrencesHelper.getcurrency();
+  var symbol = SharedPrefrencesHelper.getCurrencySymbol();
   final dbHelper = DatabaseHelper.instance;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   final formKey = GlobalKey<FormState>();
-  final dropdownKey = GlobalKey<FormState>();
+  final dropDownKey = GlobalKey<FormState>();
 
   void initState() {
-    fetchCategory();
+    fetchCategories();
 
     super.initState();
   }
@@ -50,7 +51,7 @@ class _itemsState extends State<items> {
       body: SingleChildScrollView(
         scrollDirection: Axis.vertical,
         child: Form(
-          key: dropdownKey,
+          key: dropDownKey,
           child: Column(
             children: [
               Padding(
@@ -59,7 +60,7 @@ class _itemsState extends State<items> {
                   child: DropdownButtonFormField<CategoryModel>(
                     value: selectedCategory,
                     validator: (value) {
-                      if (value!.key == -1) {
+                      if (value!.categoryId == -1) {
                         return "Please select category for add item";
                       }
                     },
@@ -67,8 +68,8 @@ class _itemsState extends State<items> {
                       setState(() {
                         selectedCategory = value!;
                         fetchItems();
-                        if (selectedCategory!.key != -1) {
-                          dropdownKey.currentState!.validate();
+                        if (selectedCategory!.categoryId != -1) {
+                          dropDownKey.currentState!.validate();
                         }
                       });
                     },
@@ -78,7 +79,7 @@ class _itemsState extends State<items> {
                         child: Row(
                           children: <Widget>[
                             Text(
-                              categoryModel.name,
+                              categoryModel.categoryName,
                               style: TextStyle(
                                 color: Colors.black,
                               ),
@@ -99,7 +100,7 @@ class _itemsState extends State<items> {
                   return Slidable(
                     child: Container(
                       color: Colors.white,
-                      height: 74,
+                      height: 50,
                       width: 375,
                       child: Padding(
                         padding: const EdgeInsets.all(12.0),
@@ -107,12 +108,12 @@ class _itemsState extends State<items> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              itemList[index].itemname,
+                              itemList[index].itemName,
                               style: TextStyle(
                                   fontWeight: FontWeight.bold, fontSize: 15),
                             ),
                             Text(
-                              '$symbol${itemList[index].itemprice}',
+                              '$symbol${itemList[index].itemPrice}',
                               style: TextStyle(
                                   fontWeight: FontWeight.bold, fontSize: 15),
                             ),
@@ -122,14 +123,14 @@ class _itemsState extends State<items> {
                     ),
                     endActionPane: ActionPane(
                       motion: const DrawerMotion(),
-                      extentRatio: 0.30,
+                      extentRatio: 0.40,
                       children: [
                         SlidableAction(
                           backgroundColor: Color(0xFFF6F9FF),
                           icon: Icons.edit,
                           onPressed: (context) {
-                            _items.text = itemList[index].itemname;
-                            _price.text = itemList[index].itemprice;
+                            _items.text = itemList[index].itemName;
+                            _price.text = itemList[index].itemPrice;
                             _displayAddEditItemDialog(
                                 context, itemList[index], true);
                           },
@@ -139,7 +140,20 @@ class _itemsState extends State<items> {
                           icon: Icons.delete,
                           onPressed: (context) {
                             showAlertDialog(
-                                context, index, itemList[index].itemkey);
+                                context, index, itemList[index].itemId);
+                          },
+                        ),
+                        SlidableAction(
+                          backgroundColor: Color(0xFFF6F9FF),
+                          icon:Icons.arrow_forward,
+                          onPressed:(context){
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>priceHistory(itemList[index].categoryId,itemList[index].itemId),
+                              ),
+
+                            );
                           },
                         ),
                       ],
@@ -156,13 +170,13 @@ class _itemsState extends State<items> {
       floatingActionButton: FloatingActionButton(
         backgroundColor: Color(0xFF1D65BD),
         onPressed: () async {
-          if (dropdownKey.currentState!.validate()) {
-            if (selectedCategory!.key != -1) {
+          if (dropDownKey.currentState!.validate()) {
+            if (selectedCategory!.categoryId != -1) {
               _items.clear();
               _price.clear();
 
               _displayAddEditItemDialog(
-                  context, ItemModel(selectedCategory!.key, "", 46, ''));
+                  context, ItemModel(selectedCategory!.categoryId, "", 46, ''));
             } else {
               return null;
             }
@@ -237,7 +251,7 @@ class _itemsState extends State<items> {
                   validator: (value) {
                     if (isEdit == true) {
                       if (value!.isEmpty &&
-                          selectedItems!.itemname.contains(_items.text)) {
+                          selectedItems!.itemName.contains(_items.text)) {
                         return "Please enter Item or item already added";
                       } else {
                         return null;
@@ -318,7 +332,7 @@ class _itemsState extends State<items> {
                           if (formKey.currentState!.validate()) {
                             if (isEdit) {
                               updateItem(
-                                  itemModel.itemkey, itemModel.categoryid);
+                                  itemModel.itemId, itemModel.categoryId);
                             } else {
                               insertItem();
                             }
@@ -340,12 +354,18 @@ class _itemsState extends State<items> {
         });
   }
 
-  fetchCategory() async {
-    categoryList = await dbHelper.getAllCategories();
+  fetchCategories() async {
+    categoryList = await dbHelper.getAllCategories('');
     var allCategory = CategoryModel("All category", -1);
     selectedCategory = allCategory;
     categoryList.sort(sortCategoryByName);
     categoryList.insert(0, allCategory);
+    for (var index = 0; index <= categoryList.length - 1; index++) {
+      if (widget.categoryid == categoryList[index].categoryId) {
+        selectedCategory = categoryList[index];
+        break;
+      }
+    }
     setState(() {});
     fetchItems();
   }
@@ -376,9 +396,9 @@ class _itemsState extends State<items> {
   }
 
   fetchItems() async {
-    print(selectedCategory!.key);
+    print(selectedCategory!.categoryId);
 
-    itemList = await dbHelper.getAllItems(selectedCategory!.key);
+    itemList = await dbHelper.getAllItems(selectedCategory!.categoryId);
 
     // itemList.clear();
 
@@ -397,7 +417,7 @@ class _itemsState extends State<items> {
   //   print(id);
   // }
   void insertItem() async {
-    ItemModel itemModel = ItemModel(selectedCategory!.key,
+    ItemModel itemModel = ItemModel(selectedCategory!.categoryId,
         _items.text.toString(), 0, _price.text.toString());
 
     final id = await dbHelper.insertItem(itemModel);
@@ -405,7 +425,7 @@ class _itemsState extends State<items> {
   }
 
   Comparator<CategoryModel> sortCategoryByName =
-      (a, b) => a.name.compareTo(b.name);
+      (a, b) => a.categoryName.compareTo(b.categoryName);
   Comparator<ItemModel> sortItemByName =
-      (a, b) => a.itemname.compareTo(b.itemname);
+      (a, b) => a.itemName.compareTo(b.itemName);
 }

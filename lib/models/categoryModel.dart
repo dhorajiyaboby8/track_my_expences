@@ -1,17 +1,17 @@
 import 'package:track_my_expences/database/database.dart';
 
 class CategoryModel {
-  String name;
-  int key;
+  String categoryName;
+  int categoryId;
 
-  CategoryModel(this.name, this.key);
+  CategoryModel(this.categoryName, this.categoryId);
 
   Map<String, dynamic> toMap() {
     final map = Map<String, dynamic>();
-    if (key > 0) {
-      map[DatabaseHelper.columnCategoryId] = key;
+    if (categoryId > 0) {
+      map[DatabaseHelper.columnCategoryId] = categoryId;
     }
-    map[DatabaseHelper.columnCategoryName] = name;
+    map[DatabaseHelper.columnCategoryName] = categoryName;
 
     return map;
   }

@@ -3,8 +3,9 @@ import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:track_my_expences/models/categoryModel.dart';
-import 'package:track_my_expences/models/expensemodel.dart';
+import 'package:track_my_expences/models/expenseModel.dart';
 import 'package:track_my_expences/models/itemModel.dart';
+import 'package:track_my_expences/models/priceHistoryModel.dart';
 
 class DatabaseHelper {
   static final _databaseName = "Database.db";
@@ -27,9 +28,10 @@ class DatabaseHelper {
   static final columnTotalPrice = 'total_price';
   static final columnExpenseNote = 'expense_note';
 
-
-  static final tablePriceHistory = 'price_history';
-  static final columnPriceHistoryId = 'pricehistory_id';
+  static final tablePriceHistory = 'tbl_price_history';
+  static final columnId = 'id';
+  static final columnNewPrice = 'new_price';
+  static final columnChangeDate = 'change_date';
 
   DatabaseHelper._privateConstructor();
 
@@ -72,13 +74,21 @@ class DatabaseHelper {
             $columnItemName TEXT ,
             $columnExpenseDate TEXT ,
             $columnItemPrice TEXT,
-            $columnDifference INTEGER,
             $columnItemquantity TEXT,
             $columnTotalPrice TEXT,
             $columnExpenseNote TEXT
             )
           ''');
-
+    await db.execute('''
+          CREATE TABLE  $tablePriceHistory (
+            $columnId INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            $columnItemId INTEGER,
+            $columnCategoryId INTEGER,
+            $columnItemName TEXT,
+            $columnItemPrice TEXT,
+            $columnNewPrice TEXT,
+            $columnChangeDate TEXT)
+          ''');
   }
 
   // Future<int> insertCategory(Map<String, dynamic> row) async {
@@ -90,19 +100,27 @@ class DatabaseHelper {
     Database? db = await instance.database;
     // return await db!.insert(tableCategory, row);
 
-    var Categorykey = await db!.insert(
+    var categorykey = await db!.insert(
       tableCategory,
       categoryModel.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
-    categoryModel.key = Categorykey;
+    categoryModel.categoryId = categorykey;
     return categoryModel;
   }
 
-  Future<List<CategoryModel>> getAllCategories() async {
+  Future<List<CategoryModel>> getAllCategories(categorysearch) async {
     List<CategoryModel> categories = [];
     Database? db = await instance.database;
-    final List<Map<String, dynamic>> allRows = await db!.query(tableCategory);
+    List<Map<String, dynamic>> allRows = [];
+    if(categorysearch != null) {
+       allRows = await db!.rawQuery(
+          "SELECT * FROM $tableCategory WHERE $columnCategoryName LIKE '%$categorysearch%'");
+    }
+    else{
+       allRows = await db!.query(tableCategory);
+    }
+
     allRows.forEach((row) => {
           categories.add(CategoryModel(
               row["$columnCategoryName"], row["$columnCategoryId"]))
@@ -122,7 +140,7 @@ class DatabaseHelper {
       tableCategory,
       categoryModel.toMap(),
       where: '$columnCategoryId = ?',
-      whereArgs: [categoryModel.key],
+      whereArgs: [categoryModel.categoryId],
     );
   }
 
@@ -144,8 +162,7 @@ class DatabaseHelper {
       tableItem,
       itemModel.toMap(),
     );
-    print('item inserted with id $itemKey');
-    itemModel.itemkey = itemKey;
+    itemModel.itemId = itemKey;
     return itemModel;
   }
 
@@ -207,7 +224,7 @@ class DatabaseHelper {
       tableItem,
       itemModel.toMap(),
       where: '$columnItemId = ?',
-      whereArgs: [itemModel.itemkey],
+      whereArgs: [itemModel.itemId],
     );
   }
 
@@ -230,29 +247,23 @@ class DatabaseHelper {
       expenseModel.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
-    expenseModel.expenseid = expenseid;
+    expenseModel.expenseId = expenseid;
     print('item inserted with id $expenseid');
 
     return expenseModel;
   }
 
   Future<List<ExpenseModel>> getAllExpenses(
-      categoryid, itemid, currentdate, reviseddate,) async {
+    categoryid,
+    itemid,
+    currentdate,
+    reviseddate,
+  ) async {
     List<ExpenseModel> expenses = [];
     Database? db = await instance.database;
     List<Map<String, dynamic>> allRows = [];
-
-    // if (categoryid != -1 && itemid != "") {
-    //   allRows = await db!.query(
-    //     tableExpense,
-    //     where: '$columnCategoryId=? AND $columnItemId=?',
-    //     whereArgs: [categoryid, itemid],
-    //   );
-    // } else {
-    //   allRows = await db!.query(tableExpense);
-    // }
-
     if (itemid == -1 && categoryid == -1) {
+      print(currentdate);
       allRows = await db!.query(tableExpense,
           where: '$columnExpenseDate >= ? AND $columnExpenseDate <?',
           whereArgs: [currentdate, reviseddate]);
@@ -279,9 +290,8 @@ class DatabaseHelper {
               row["$columnCategoryId"],
               row["$columnItemId"],
               row["$columnItemName"],
-              row[columnExpenseDate],
+              row["$columnExpenseDate"],
               row[columnItemPrice],
-
               row["$columnItemquantity"],
               row["$columnTotalPrice"],
               row["$columnExpenseNote"]))
@@ -290,33 +300,52 @@ class DatabaseHelper {
     return expenses;
   }
 
-  Future<int> deleteExpense(int id) async {
+  Future<PriceHistoryModel> insertPriceChange(
+      PriceHistoryModel priceHistoryModel) async {
     Database? db = await instance.database;
-    return await db!
-        .delete(tableItem, where: '$columnItemId = ?', whereArgs: [id]);
+    // return await db!.insert(tableCategory, row);
+
+    var id = await db!.insert(
+      tablePriceHistory,
+      priceHistoryModel.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+    priceHistoryModel.id = id;
+    return priceHistoryModel;
   }
 
-//   Future<PriceHistoryModel> insertpricehistory(
-//       PriceHistoryModel priceHistoryModel) async {
-//     Database? db = await instance.database;
-// print('yduuindndndndddddd');
-//     var pricehistory = await db!.insert(
-//      tablePriceHistory,
-//       priceHistoryModel.toMap(),
-//       conflictAlgorithm: ConflictAlgorithm.replace,
-//     );
-//     priceHistoryModel.pricehistoryid = pricehistory;
-//     return priceHistoryModel;
-//   }
-//   Future<List<PriceHistoryModel>> getAllpricehistory() async {
-//     List<PriceHistoryModel> pricehistory = [];
-//     Database? db = await instance.database;
-//     print('1234567890');
-//     final List<Map<String, dynamic>> allRows = await db!.query(tablePriceHistory);
-//     allRows.forEach((row) => {
-//       pricehistory.add(PriceHistoryModel(
-//           row["$columnPriceHistoryId"], row["$columnItemId"],row["$columnPriceDifference"],row["$columnExpenseDate"]))
-//     });
-//     return pricehistory;
-//   }
+  Future<List<PriceHistoryModel>> getAllPriceChange(
+      categoryId, itemId, currentDate, revisedDate) async {
+    List<PriceHistoryModel> PriceChange = [];
+    Database? db = await instance.database;
+    List<Map<String, dynamic>> allRows = [];
+    if (itemId == -1 && categoryId == -1) {
+      print(
+        'current date :$currentDate revised date :$revisedDate',
+      );
+var query="SELECT * FROM $tablePriceHistory INNER JOIN $tableItem ON $tableItem.$columnItemId = $tablePriceHistory.$columnItemId WHERE $currentDate < $tablePriceHistory.$columnChangeDate  AND $tablePriceHistory.$columnChangeDate < $revisedDate";
+      allRows =await db!.rawQuery(query);
+      print(query);
+    } else if (categoryId != -1 && itemId == -1) {
+      allRows =await db!.rawQuery('SELECT * FROM $tablePriceHistory INNER JOIN $tableItem ON $tableItem.$columnItemId = $tablePriceHistory.$columnItemId WHERE  $currentDate<= $tablePriceHistory.$columnChangeDate  AND $tablePriceHistory.$columnChangeDate < $revisedDate AND $tableItem.$columnCategoryId = $categoryId');
+
+
+    } else if (itemId == null) {
+      allRows =await db!.rawQuery('SELECT * FROM $tablePriceHistory INNER JOIN $tableItem ON $tableItem.$columnItemId = $tablePriceHistory.$columnItemId WHERE  $currentDate<= $tablePriceHistory.$columnChangeDate  AND $tablePriceHistory.$columnChangeDate < $revisedDate');
+    } else {
+      allRows = await db!.rawQuery('SELECT * FROM $tablePriceHistory INNER JOIN $tableItem ON $tableItem.$columnItemId = $tablePriceHistory.$columnItemId WHERE $currentDate<= $tablePriceHistory.$columnChangeDate  AND $tablePriceHistory.$columnChangeDate < $revisedDate AND $tableItem.$columnItemId = $itemId');
+    }
+print('datalength ${allRows.length}');
+    allRows.forEach((row) => {
+      print('data:'+row["$columnItemName"]),
+          PriceChange.add(PriceHistoryModel(
+              row["$columnId"],
+              row["$columnItemId"],
+              row["$columnItemPrice"],
+              row["$columnNewPrice"],
+              row["$columnChangeDate"],
+          row[""]))
+        });
+    return PriceChange;
+  }
 }
